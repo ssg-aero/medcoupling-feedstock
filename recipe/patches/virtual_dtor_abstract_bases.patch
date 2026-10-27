@@ -1,0 +1,20 @@
+--- a/src/INTERP_KERNEL/InterpolationOptions.hxx
++++ b/src/INTERP_KERNEL/InterpolationOptions.hxx
+@@ -40,6 +40,7 @@
+ class INTERPKERNEL_EXPORT FEInterpolationOptionsAbstract
+ {
+    public:
++    virtual ~FEInterpolationOptionsAbstract() = default;
+     virtual double getProjectionMaxDistance() const = 0;
+     virtual void setProjectionMaxDistance(double projDistMax) = 0;
+     virtual bool getProjectionOnSurfStatus() const = 0;
+--- a/src/ParaMEDMEM/CFEMDEC.hxx
++++ b/src/ParaMEDMEM/CFEMDEC.hxx
+@@ -41,6 +41,7 @@
+ {
+    public:
+     CFEMDECAccessToMaster(CFEMDEC *master) : _master(master) {}
++    virtual ~CFEMDECAccessToMaster() = default;
+     MPIProcessorGroup *getUnionGrp() const;
+     virtual MPIProcessorGroup *getSourceGrp() const = 0;
+     virtual MPIProcessorGroup *getTargetGrp() const = 0;
