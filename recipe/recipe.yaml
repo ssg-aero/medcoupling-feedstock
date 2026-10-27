@@ -4,7 +4,7 @@ context:
   name: medcoupling
   mpi: ${{ mpi or "nompi" }}
   version: 9.16.0
-  build: 0
+  build: 1
   mpi_prefix: ${{ "nompi" if mpi == "nompi" else "mpi_" + mpi }}
 
 package:
@@ -16,6 +16,15 @@ source:
     sha256: e2bc58f58252ffc215aa5bb61daf3bc3e3fd1ce6e8a7c427b8545696531542a9
     patches:
       - patches/swig_python2_api_compat.patch
+      # abstract bases deleted through unique_ptr need a virtual destructor
+      # (clang turns this undefined behavior into a trap in ~CFEMDEC)
+      - patches/virtual_dtor_abstract_bases.patch
+      # macOS: std::int64_t is 'long long', the SWIG layer and med_int use 'long'
+      - if: osx
+        then:
+          - patches/osx_int64_is_long.patch
+          # case-insensitive file system: MEDCoupling would overwrite medcoupling
+          - patches/osx_case_insensitive_install.patch
   - url: https://github.com/SalomePlatform/configuration/archive/refs/tags/V${{ version | replace('.', '_') }}.tar.gz
     sha256: c8da17e7d09a335b35a1e3c9e679576c3b0c42728a5219514271df6020c70ef6
     target_directory: deps/config
@@ -25,7 +34,8 @@ source:
 build:
   number: ${{ build|int + 100 if mpi == "nompi" else build|int }}
   string: py${{ python | version_to_buildstring }}_${{ mpi_prefix }}_h${{ hash }}_${{ build }}
-  skip: osx
+  # osx-64 is not tested
+  skip: osx and not arm64
   prefix_detection:
     ignore_binary_files: true
 
@@ -67,7 +77,7 @@ tests:
         - MEDCouplingRemapper
         - MEDLoader
         - MEDPartitioner
-        - if: win or osx
+        - if: win
           then: MEDCouplingCompat
 
 about:

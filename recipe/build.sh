@@ -8,6 +8,15 @@ else
   on_mpi="ON"
 fi
 
+osx_args=()
+if [[ "${target_platform}" == osx-* ]]; then
+  # FindSalomePythonLibs looks for 'python-config' on APPLE
+  osx_args+=(-DPYTHON_CONFIG_EXECUTABLE="${PREFIX}/bin/python3-config")
+  # python extensions must not link libpython (the interpreter is static),
+  # the python symbols are resolved when the module is loaded
+  export LDFLAGS="${LDFLAGS} -Wl,-undefined,dynamic_lookup"
+fi
+
  # Disable PTScotch because petsc is not built against int64
 cmake  -B build . \
     -DCMAKE_BUILD_TYPE="Release" \
@@ -30,6 +39,7 @@ cmake  -B build . \
     -DMEDCOUPLING_PARTITIONER_PTSCOTCH=OFF \
     -DMPI_C_COMPILER:PATH="$(which mpicc)" \
     -DMPI_CXX_COMPILER:PATH="$(which mpicxx)" \
+    "${osx_args[@]}" \
     ${CMAKE_ARGS}
 
 cd build

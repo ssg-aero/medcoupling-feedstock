@@ -1,0 +1,29 @@
+diff -ru a/src/MEDCoupling_Swig/CMakeLists.txt b/src/MEDCoupling_Swig/CMakeLists.txt
+--- a/src/MEDCoupling_Swig/CMakeLists.txt	2026-10-27 12:06:19
++++ b/src/MEDCoupling_Swig/CMakeLists.txt	2026-10-27 12:06:20
+@@ -179,12 +179,21 @@
+     _${MEDCouling_target_name} PROPERTIES DEBUG_OUTPUT_NAME
+                                           _${MEDCouling_target_name}_d)
+ endif(WIN32)
+-install(TARGETS ${SWIG_MODULE_${MEDCouling_target_name}_REAL_NAME}
+-                ${SWIG_MODULE_MEDCouplingRemapper_REAL_NAME}
+-        DESTINATION ${MEDCOUPLING_INSTALL_PYTHON})
++if(APPLE)
++  # The file system is case-insensitive: MEDCoupling.py/_MEDCoupling.so would overwrite
++  # medcoupling.py/_medcoupling.so from PyWrapping that gathers all the modules.
++  install(TARGETS ${SWIG_MODULE_MEDCouplingRemapper_REAL_NAME}
++          DESTINATION ${MEDCOUPLING_INSTALL_PYTHON})
++else()
++  install(TARGETS ${SWIG_MODULE_${MEDCouling_target_name}_REAL_NAME}
++                  ${SWIG_MODULE_MEDCouplingRemapper_REAL_NAME}
++          DESTINATION ${MEDCOUPLING_INSTALL_PYTHON})
++endif()
+ 
+ set(PYFILES_TO_INSTALL ${CMAKE_CURRENT_BINARY_DIR}/MEDCouplingRemapper.py)
+-if(WIN32)
++if(APPLE)
++  # see above
++elseif(WIN32)
+   set(PYFILES_TO_INSTALL ${PYFILES_TO_INSTALL}
+                          ${CMAKE_CURRENT_BINARY_DIR}/MEDCouplingCompat.py)
+ else()

@@ -1,0 +1,70 @@
+diff -ru a/src/INTERP_KERNEL/MCIdType.hxx b/src/INTERP_KERNEL/MCIdType.hxx
+--- a/src/INTERP_KERNEL/MCIdType.hxx	2026-10-27 10:44:21
++++ b/src/INTERP_KERNEL/MCIdType.hxx	2026-10-27 10:44:21
+@@ -30,6 +30,11 @@
+ 
+ typedef std::int32_t mcIdType;
+ 
++#elif defined(__APPLE__)
++
++// std::int64_t is 'long long' on macOS: use 'long' as the SWIG layer and med_int do
++typedef long mcIdType;
++
+ #else
+ 
+ typedef std::int64_t mcIdType;
+diff -ru a/src/MEDCoupling/MCType.hxx b/src/MEDCoupling/MCType.hxx
+--- a/src/MEDCoupling/MCType.hxx	2026-10-27 10:44:21
++++ b/src/MEDCoupling/MCType.hxx	2026-10-27 10:44:21
+@@ -29,7 +29,12 @@
+ namespace MEDCoupling
+ {
+ using mcIdType = ::mcIdType;
++#if defined(__APPLE__)
++// std::int64_t is 'long long' on macOS: use 'long' as the SWIG layer and med_int do
++using Int64 = long;
++#else
+ using Int64 = std::int64_t;
++#endif
+ using Int32 = std::int32_t;
+ 
+ class DataArrayInt32;
+diff -ru a/src/MEDCoupling/MEDCouplingMemArray.cxx b/src/MEDCoupling/MEDCouplingMemArray.cxx
+--- a/src/MEDCoupling/MEDCouplingMemArray.cxx	2026-10-27 10:55:44
++++ b/src/MEDCoupling/MEDCouplingMemArray.cxx	2026-10-27 10:55:44
+@@ -4148,7 +4148,7 @@
+     std::for_each(
+         ret->getPointer(),
+         ret->getPointer() + ret->getNbOfElems(),
+-        [&pt](std::int64_t &val) { val = std::int64_t(*pt++); }
++        [&pt](Int64 &val) { val = Int64(*pt++); }
+     );
+     return ret;
+ }
+@@ -4199,7 +4199,7 @@
+     MCAuto<DataArrayInt32> ret(DataArrayInt32::New());
+     ret->alloc(this->getNumberOfTuples(), this->getNumberOfComponents());
+     ret->copyStringInfoFrom(*this);
+-    const std::int64_t *pt(this->begin());
++    const Int64 *pt(this->begin());
+     std::for_each(
+         ret->getPointer(),
+         ret->getPointer() + ret->getNbOfElems(),
+diff -ru a/src/ParaMEDMEM/MPITraits.hxx b/src/ParaMEDMEM/MPITraits.hxx
+--- a/src/ParaMEDMEM/MPITraits.hxx	2026-10-27 10:55:44
++++ b/src/ParaMEDMEM/MPITraits.hxx	2026-10-27 10:55:44
+@@ -36,12 +36,12 @@
+ const MPI_Datatype MPITraits<char>::MPIType = MPI_CHAR;
+ 
+ template <>
+-struct MPITraits<std::int64_t>
++struct MPITraits<Int64>
+ {
+     static const MPI_Datatype MPIType;
+     using ArrayType = DataArrayInt64;
+ };
+-const MPI_Datatype MPITraits<std::int64_t>::MPIType = MPI_INT64_T;
++const MPI_Datatype MPITraits<Int64>::MPIType = MPI_INT64_T;
+ 
+ template <>
+ struct MPITraits<double>
